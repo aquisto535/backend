@@ -1,0 +1,22 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aquisto535/nomads.git"
+  },
+  "author": "Jung",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aquisto535/nomads/issues"
+  },
+  "homepage": "https://github.com/aquisto535/nomads#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
