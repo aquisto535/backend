@@ -5,3 +5,21 @@ localhost = 127.0.0.1
 	   단방향적 통신으로 서버가 클라이언트로 요청을 보낼 수 없음.
 -소켓 동신 방식: 전화기로 사람들이 연결되는 것과 유사함.
 -서버는 요청을 받으면 내용을 보내주는 프로그램.
+
+Interface: 서로 다른 두 개의 시스템, 장치 사이에서 정보나 신호를 주고받는 경우의 접점이나 경계면
+API: 어플리케이션 프로그래밍 인터페이스. 운영체제(os)에서 제공해주는 함수.
+REST API : REST원칙을 따르는 API
+
+<REST 원칙>
+http: get, post, put, delete
+
+1. uniform Interface : 인터페이스는 일관성을 지녀야 한다. 우리가 신경쓸 부분. 
+2. client-server 역할 구분 : client는 요청만 하고 server는 응답만 한다.
+3. stateless : client의 요청이 다른 client의 요청에 영향을 끼쳐서는 안된다.
+4. cachable : 캐시를 저장해야한다.
+
+<데이터베이스>
+1. 관계형 데이터베이스: 오라클,  mySQL, msSQL, postgreSQL, mariaDB
+
+2. NoSQL: mongoDB
+

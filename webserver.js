@@ -1,9 +1,12 @@
 const express = require("express");
 
 const app = express(); //함수 포인터. 객체로 받음. express의 모든 기능을 담게 됨.
+const bodyParser = require("body-parser");
 
-app.get("/webtoon", (req, res) => {
-  res.send("웹툰을 서비스하는 페이지입니다.");
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get("/write", (req, res) => {
+  res.sendFile(__dirname + "/write.html");
 });
 
 app.get("/game", (req, res) => {
@@ -12,6 +15,16 @@ app.get("/game", (req, res) => {
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
+});
+
+//post를 받을 때 사용
+app.post("/add", (req, res) => {
+  console.log(req.body.title);
+  console.log(req.body.date);
+
+  //파일 입출력, 엑셀, DB
+
+  res.send("전송 완료");
 });
 
 app.listen(8080, () => {
