@@ -17,23 +17,19 @@
         <% for(var i = 0; i < posts.length; i++){ %>
         <li class="list-group-item">
           <p>글번호 : <%- posts[i]._id %></p>
-          <a href="/detail/<%- posts[i]._id %>"
+          <a href="/detail/<%= posts[i]._id %>"
             ><h4>할일 제목 : <%- posts[i].todo %></h4></a
           >
           <p>날짜 : <%= posts[i].date %></p>
-          <button class="btn btn-danger delete" data-id="<%- posts[i]._id %>">
+          <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">
             삭제
           </button>
-          <a href="/edit/<%- posts[i]._id %>">수정</a>
+          <a href="/edit/<%= posts[i]._id %>">수정</a>
         </li>
         <% } %>
       </ul>
     </div>
-    <script
-      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-      crossorigin="anonymous"
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
       integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"

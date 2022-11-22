@@ -17,8 +17,8 @@
       <form action="/edit?_method=PUT" method="post">
         <div class="form-group">
           <label for="floatingInput">오늘의 할일</label>
-          <input class="form-control" name="title" value="<%-post._id %>" />
-          <input class="form-control" name="title" value="<%-post.data %>" />
+          <input class="form-control" name="title" value="<%=post._id %>" />
+          <input class="form-control" name="title" value="<%=post.data %>" />
         </div>
       </form>
       <div class="form-floating">

@@ -80,7 +80,6 @@ app.get("/list", (req, res) => {
   db.collection("post")
     .find()
     .toArray(function (err, result) {
-      console.log(result);
       res.render("list.ejs", { posts: result });
     });
 });
