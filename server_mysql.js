@@ -7,10 +7,12 @@ app.set("view engine", "ejs");
 const methodOverride = require("method-override");
 
 app.use("/public", express.static("public"));
-app.use(methodOverride("_method"));
+app.use(methodOverride("_method")); // put 쓰기 위한 패키지.
+//const FileStore = require("session-file-store");
+const session = require("express-session"); //세션 정보 이용하기 위한 패키지.
+const MySQLStore = require("express-mysql-session");
 
-// const FileStore = require("session-file-store");
-// const session = require("express-session");
+//session: file store. 세션 정보를 파일에 저장하는 방법
 // app.use(
 //   session({
 //     secret: "secret key",
@@ -19,6 +21,26 @@ app.use(methodOverride("_method"));
 //     store: new FileStore(),
 //   })
 // );
+
+//session: mysql store.  세션 정보를 db에 저장하는 방법.
+app.use(
+  session({
+    secret: "secret key",
+    resave: false,
+    saveUninitialized: true,
+    store: new MySQLStore({
+      host: "localhost",
+      port: 3306,
+      user: "root",
+      password: "123456",
+      database: "node_dbs",
+    }),
+  })
+);
+
+//md5 + salt
+let md5 = require("md5");
+let salt = "asibgljg65654gfwqw3235";
 
 var db;
 const MongoClient = require("mongodb").MongoClient;
@@ -32,12 +54,27 @@ MongoClient.connect(
     // db.collection('post').insertOne({이름 : 'john', 나이 : 20}, function(err, result){
     //     console.log('저장완료');
     // })
-
-    app.listen(8080, function () {
-      console.log("listening on 8080");
-    });
   }
 );
+
+// mysql 연동
+
+const mysql = require("mysql");
+
+const conn = mysql.createConnection({
+  host: "127.0.0.1",
+  user: "root",
+  password: "123456",
+  database: "node_dbs",
+});
+
+conn.connect();
+
+console.log("mysql 접속 성공!!");
+
+app.listen(8080, function () {
+  console.log("listening on 8080");
+});
 
 app.get("/pet", function (req, res) {
   res.send("펫용품을 쇼핑할 수 있는 페이지입니다.");
@@ -55,50 +92,50 @@ app.get("/write", (req, res) => {
   res.render("write.ejs");
 });
 
-app.get("/logout", (req, res) => {
-  delete req.session.count;
-  res.render("/");
-});
+// /list로 GET요청을 접속, 실제 mysql에 저장된 데이터를 읽어와서 HTML을 보여줌
+app.get("/list", (req, res) => {
+  let sql = "select * from todo_bk";
+  let list = "";
 
-app.post("/add", function (req, res) {
-  res.send("전송완료");
-  console.log(req.body.title);
-  console.log(req.body.date);
+  conn.query(sql, function (err, rows, fields) {
+    if (err) {
+      console.log(err);
+    } else {
+      // for (let i = 0; i < rows.length; i++) {
+      //   list += rows[i].title + " : " + rows[i].created + "<br/>";
+      // }
+      // res.send(list);
 
-  //어떤 사람이 /add라는 경로로 post 요청을 하면
-  // 데이터 2개를 보내주는데 post라는 컬렉션에 두 개의 데이터를 저장한다.
-  db.collection("counter").findOne({ name: "postcnt" }, function (err, result) {
-    console.log(result);
-
-    var totalcount = result.totalPost;
-
-    db.collection("post").insertOne(
-      { _id: totalcount + 1, todo: req.body.title, date: req.body.date },
-      function (err, result) {
-        console.log("저장완료");
-        //counter라는 컬렉션에 있는 totalPost 1증가시켜주어야 함.
-        db.collection("counter").updateOne(
-          { name: "postcnt" },
-          { $inc: { totalPost: 1 } },
-          function (err, result) {
-            if (err) return console.log(err);
-          }
-        );
-      }
-    );
+      res.render("list_mysql.ejs", { posts: rows });
+    }
   });
 });
 
-// /list로 GET요청을 접속, 실제 몽고DB에 저장된 데이터를 읽어와서 HTML을 보여줌
-app.get("/list", (req, res) => {
-  // DB 에 저장된 post라는 컬렉션에 있는 데이터 두개를 꺼내서 넘겨주자.
-  db.collection("post")
-    .find()
-    .toArray(function (err, result) {
-      console.log(result);
-      res.render("list", { posts: result });
-    });
+app.post("/add", function (req, res) {
+  console.log(req.body.title);
+  console.log(req.body.created);
+
+  let sql = `insert todo_bk (title, created) values(
+    "${req.body.title}", "${req.body.created}"
+    )`;
+
+  conn.query(sql, function (err, rows, fields) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.redirect("/list");
+    }
+  });
 });
+
+// 쿠키
+// app.get("/count", (req, res) => {
+//   if (req.cookies.count) {
+//     var count = parseInt(req.cookies.count);
+//   } else {
+//     var count = 0;
+//   }
+// });
 
 app.delete("/delete", (req, res) => {
   console.log(req.body);
@@ -168,12 +205,18 @@ app.get("/count", function (req, res) {
 });
 
 app.get("/temp", function (req, res) {
-  res.send("result : " + req.session.count);
+  res.send("result : " + req.session.userid);
+});
+
+//로그아웃
+app.get("/logout", (req, res) => {
+  delete req.session.count;
+  res.redirect("/");
 });
 
 // 로그인 라우터
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login_mysql");
 });
 
 app.post("/login", (req, res) => {
@@ -183,17 +226,24 @@ app.post("/login", (req, res) => {
   console.log(userid);
   console.log(userpw);
 
-  db.collection("login").findOne({ id: userid }, function (err, result) {
-    if (err) return console.log(err);
+  let sql = `select * from login`;
 
-    if (!result) {
-      res.send("존재하지 않는 아이디입니다.");
+  conn.query(sql, function (err, rows, fields) {
+    if (err) {
+      return console.log(err);
     } else {
-      if (result.password == userpw) {
-        res.send("로그인 되었습니다.");
-        res.redirect("/");
-      } else {
-        res.redirect("/login");
+      for (let i = 0; i < rows.length; i++) {
+        if (md5(rows[i].userid + salt) == md5(userid + salt)) {
+          if (md5(rows[i].userpw + salt) == md5(userpw + salt)) {
+            // 둘 다 해싱시켜 동일한 비번인지 확인. 보안과 일치 여부 동시 충족.
+            console.log(md5(rows[i].userpw + salt));
+            console.log(md5(userpw + salt));
+            req.session.userid = userid;
+            res.redirect("/");
+          } else {
+            res.send("비밀번호가 틀렸습니다.");
+          }
+        }
       }
     }
   });
@@ -201,28 +251,27 @@ app.post("/login", (req, res) => {
 
 //회원가입 라우터
 app.get("/signup", (req, res) => {
-  res.render("signup.ejs");
+  res.render("signup_mysql.ejs");
 });
 
 app.post("/signup", (req, res) => {
-  // let userid = req.body.id;
-  // let userpw = req.body.pw;
-  // let userphone = req.body.ph;
-  // let usercountry = req.body.co;
+  console.log(req.body.id);
+  console.log(req.body.pw);
+  console.log(req.body.ph);
+  console.log(req.body.co);
 
-  db.collection("login").insertOne(
-    {
-      id: req.body.id,
-      pw: req.body.pw,
-      phone: req.body.ph,
-      country: req.body.co,
-    },
-    function (err, result) {
-      if (err) return console.log(err);
-      console.log("저장 완료");
-      console.log(result);
+  let sql = `insert login (userid, userpw, mobile, country) values(
+    "${req.body.id}", 
+    "${req.body.pw}",
+    "${req.body.ph}",
+    "${req.body.co}"
+    )`;
 
-      return res.redirect("/");
+  conn.query(sql, function (err, rows, fields) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.redirect("/login");
     }
-  );
+  });
 });
