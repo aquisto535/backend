@@ -16,11 +16,14 @@ MongoClient.connect(
   function (err, client) {
     if (err) return console.log(err);
 
-    db = client.db("TodoApp");
+    db = client.db("todo_app");
 
-    // db.collection('post').insertOne({이름 : 'john', 나이 : 20}, function(err, result){
-    //     console.log('저장완료');
-    // })
+    // db.collection("post").insertOne(
+    //   { 이름: "john", 나이: 20 },
+    //   function (err, result) {
+    //     console.log("저장완료");
+    //   }
+    // );
 
     app.listen(8080, function () {
       console.log("listening on 8080");
@@ -52,8 +55,6 @@ app.post("/add", function (req, res) {
   //어떤 사람이 /add라는 경로로 post 요청을 하면
   // 데이터 2개를 보내주는데 post라는 컬렉션에 두 개의 데이터를 저장한다.
   db.collection("counter").findOne({ name: "postcnt" }, function (err, result) {
-    console.log(result.totalPost);
-
     var totalcount = result.totalPost;
 
     db.collection("post").insertOne(
@@ -101,7 +102,7 @@ app.get("/detail/:id", (req, res) => {
     function (err, result) {
       if (err) return console.log(err);
       console.log(result);
-      res.render("detail.ejs", { data: result });
+      res.render("detail", { data: result });
     }
   );
 });
