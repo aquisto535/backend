@@ -11,48 +11,44 @@
   </head>
   <body>
     <%- include('nav.html') %>
-    <div class="contaniner mt-4">
-      <h2 class="text-center">글 작성 페이지</h2>
 
-      <form action="/edit?_method=PUT" method="post">
+    <h4 class="container mt-4"><strong>글 작성페이지</strong></h4>
+
+    <div class="container mt-3">
+      <form action="/edit?_method=PUT" method="POST">
         <div class="form-group">
-          <label for="floatingInput">오늘의 할일</label>
-          <input class="form-control" name="title" value="<%=post._id %>" />
-          <input class="form-control" name="title" value="<%=post.data %>" />
+          <label>오늘의 할일 : <%= post.todo %></label>
+          <input
+            type="text"
+            name="id"
+            style="display: none"
+            value=" <%= post._id %>"
+          />
+          <input
+            type="text"
+            class="form-control"
+            name="title"
+            value="<%= post.todo %>"
+          />
         </div>
+        <div class="form-group">
+          <label>날짜</label>
+          <input
+            type="text"
+            class="form-control"
+            name="date"
+            value=" <%= post.date %>"
+          />
+        </div>
+        <button type="submit" class="btn btn-outline-secondary">수정</button>
       </form>
-      <div class="form-floating">
-        <label for="floatingPassword">Password</label>
-        <input class="form-control" name="title" value="<%-post._id %> " />
-      </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
-
-    <script>
-      $(".delete").click(function (e) {
-        var num = e.target.dataset.id;
-        console.log(num);
-        var btnClick = $(this);
-
-        $.ajax({
-          method: "DELETE",
-          url: "/delete",
-          data: { _id: num },
-        })
-          .done(function (result) {
-            console.log("성공했어요.");
-            //삭제 대상을 안보이게 처리하는 루틴
-            btnClick.parent("li").fadeOut();
-          })
-          .fail(function (xhr, textStatus, errorThrown) {
-            //요청 실패하면 여기
-            console.log(xhr, textStatus, errorThrown);
-          });
-      });
-    </script>
-
-    <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script> -->
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
     <script
       src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
       integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"

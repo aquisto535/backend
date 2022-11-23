@@ -38,9 +38,16 @@ app.use(
   })
 );
 
-//md5 + salt
+//보안 기능 : md5 + salt
 let md5 = require("md5");
 let salt = "asibgljg65654gfwqw3235";
+
+//보안 기능 : sha256
+let sha256 = require("sha256");
+
+//보안 기능 : hasher
+let bkpw = require("pbkdf2-password");
+let hasher = bkpw();
 
 var db;
 const MongoClient = require("mongodb").MongoClient;
@@ -233,11 +240,24 @@ app.post("/login", (req, res) => {
       return console.log(err);
     } else {
       for (let i = 0; i < rows.length; i++) {
-        if (md5(rows[i].userid + salt) == md5(userid + salt)) {
-          if (md5(rows[i].userpw + salt) == md5(userpw + salt)) {
+        if (rows[i].userid == userid) {
+          return hasher(
+            { password: userpw, salt: rows[i].mobile },
+            function (err, pass, salt, hash) {
+              console.log(pass);
+              console.log(salt);
+              console.log(hash);
+              if (hash == rows[i].userpw) {
+                req.session.userid = userid;
+                res.redirect("/");
+              }
+            }
+          );
+
+          if (sha256(rows[i].userpw + salt) == sha256(userpw + salt)) {
             // 둘 다 해싱시켜 동일한 비번인지 확인. 보안과 일치 여부 동시 충족.
-            console.log(md5(rows[i].userpw + salt));
-            console.log(md5(userpw + salt));
+            console.log(sha256(rows[i].userpw + salt));
+            console.log(sha256(userpw + salt));
             req.session.userid = userid;
             res.redirect("/");
           } else {
@@ -260,18 +280,24 @@ app.post("/signup", (req, res) => {
   console.log(req.body.ph);
   console.log(req.body.co);
 
-  let sql = `insert login (userid, userpw, mobile, country) values(
+  hasher({ password: req.body.pw }, function (err, pass, salt, hash) {
+    console.log(pass);
+    console.log(salt);
+    console.log(hash);
+
+    let sql = `insert login (userid, userpw, mobile, country) values(
     "${req.body.id}", 
-    "${req.body.pw}",
-    "${req.body.ph}",
+    "${hash}",
+    "${salt}",
     "${req.body.co}"
     )`;
 
-  conn.query(sql, function (err, rows, fields) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.redirect("/login");
-    }
+    conn.query(sql, function (err, rows, fields) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.redirect("/login");
+      }
+    });
   });
 });
