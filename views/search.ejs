@@ -14,24 +14,10 @@
 
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
 
-    <h2 class="ml-2 my-3 text-center">서버에서 가져온 할일 리스트</h2>
-
-    <div class="container input-group mb-2">
-      <input class="form-control" id="search-input" />
-      <button class="input-group-append btn btn-danger" id="search">
-        검색
-      </button>
-    </div>
-
-    <script>
-      $("#search").click(function () {
-        let inputValue = $("#search-input").val();
-        window.location.replace("/search?value=" + inputValue);
-      });
-    </script>
+    <h2 class="ml-2 my-3 text-center">검색 결과</h2>
 
     <div class="container">
-      <ul class="list-group">
+      <ul class="list-group list-group-numbered">
         <% for(var i = 0; i < posts.length; i++){ %>
         <li class="list-group-item">
           <p>글번호 : <%= posts[i]._id %></p>
@@ -42,7 +28,7 @@
           <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">
             삭제
           </button>
-          <a href="/edit/<%= posts[i]._id %>">수정</a>
+          <a href="/edit/<%= posts[i]._id %>" style="margin-left: 10px">수정</a>
         </li>
         <% } %>
       </ul>
@@ -74,7 +60,6 @@
             console.log("성공했어요.");
             //삭제 대상을 안보이게 처리하는 루틴
             btnClick.parent("li").fadeOut();
-            location.reload();
           })
           .fail(function (xhr, textStatus, errorThrown) {
             //요청 실패하면 여기

@@ -12,21 +12,12 @@
   <body>
     <%-include('nav.html') %>
 
-    <h4 class="container mt-4"><strong>글 작성페이지</strong></h4>
+    <h4 class="container mt-4"><strong>이미지 파일 업로드</strong></h4>
 
     <div class="container mt-3">
-      <form action="/add" method="POST">
-        <div class="form-group">
-          <label>오늘의 할일</label>
-          <input type="text" class="form-control" name="title" />
-        </div>
-        <div class="form-group">
-          <label>날짜</label>
-          <input type="text" class="form-control" name="date" />
-        </div>
-        <button type="submit" class="btn btn-outline-secondary">
-          저장하기
-        </button>
+      <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="profile"/>
+        <button type="submit">전송</button>
       </form>
     </div>
 

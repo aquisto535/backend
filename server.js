@@ -40,31 +40,21 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+//라우터 미들웨어 설정
+app.use("/webtoon", require("./routes/webtoon.js"));
+app.use("/", require("./routes/shop.js"));
+app.use("/", require("./routes/list.js"));
+
 var db;
 const MongoClient = require("mongodb").MongoClient;
 MongoClient.connect(process.env.DB_URL, function (err, client) {
   if (err) return console.log(err);
 
   db = client.db("todo_app");
-
-  // db.collection("post").insertOne(
-  //   { 이름: "john", 나이: 20 },
-  //   function (err, result) {
-  //     console.log("저장완료");
-  //   }
-  // );
-
-  app.listen(process.env.PORT, function () {
-    console.log("listening on 8080");
-  });
 });
 
-app.get("/pet", function (req, res) {
-  res.send("펫용품을 쇼핑할 수 있는 페이지입니다.");
-});
-
-app.get("/beauty", function (req, res) {
-  res.send("뷰티용품을 쇼핑할 수 있는 페이지입니다.");
+app.listen(process.env.PORT, function () {
+  console.log("listening on 8080");
 });
 
 app.get("/", function (req, res) {
@@ -75,53 +65,7 @@ app.get("/write", (req, res) => {
   res.render("write");
 });
 
-app.post("/add", function (req, res) {
-  res.send("전송완료");
-  console.log(req.body.title);
-  console.log(req.body.date);
-
-  //어떤 사람이 /add라는 경로로 post 요청을 하면
-  // 데이터 2개를 보내주는데 post라는 컬렉션에 두 개의 데이터를 저장한다.
-  db.collection("counter").findOne({ name: "postcnt" }, function (err, result) {
-    var totalcount = result.totalPost;
-
-    db.collection("post").insertOne(
-      { _id: totalcount + 1, todo: req.body.title, date: req.body.date },
-      function (err, result) {
-        console.log("저장완료");
-        //counter라는 컬렉션에 있는 totalPost 1증가시켜주어야 함.
-        db.collection("counter").updateOne(
-          { name: "postcnt" },
-          { $inc: { totalPost: 1 } },
-          function (err, result) {
-            if (err) return console.log(err);
-          }
-        );
-      }
-    );
-  });
-});
-
-// /list로 GET요청을 접속, 실제 몽고DB에 저장된 데이터를 읽어와서 HTML을 보여줌
-app.get("/list", (req, res) => {
-  // DB 에 저장된 post라는 컬렉션에 있는 데이터 두개를 꺼내서 넘겨주자.
-  db.collection("post")
-    .find()
-    .toArray(function (err, result) {
-      res.render("list.ejs", { posts: result });
-    });
-});
-
-app.delete("/delete", function (req, res) {
-  console.log(req.body);
-  req.body._id = parseInt(req.body._id);
-  db.collection("post").deleteOne(req.body, function (err, result) {
-    if (err) return console.log(err);
-    console.log("삭제완료");
-    res.status(200).send({ message: "성공했습니다." });
-  });
-});
-
+//시맨틱 url
 app.get("/detail/:id", (req, res) => {
   console.log("상세페이지 : ", req.params.id);
   db.collection("post").findOne(
@@ -299,6 +243,93 @@ function islogin(req, res, next) {
   }
 }
 
-app.get("/qtest", (req, res) => {
-  res.send(req.query.id + "," + req.query.pw);
+app.get("/search", (req, res) => {
+  console.log(req.query.value);
+  // 일반적인 순차검색
+  // db.collection("post")
+  //   .find({ todo: req.query.value })
+  //   .toArray((err, result) => {
+  //     console.log(result);
+  //     res.render("search.ejs", { posts: result });
+  //   });
+
+  //바이너리 검색
+  db.collection("post")
+    .find({ $text: { $search: req.query.value } }) //컬렉션 안에 todo로만 새로운 index를 생성한 후 그 index에 맞는 포맷으로 검색.
+    .toArray((err, result) => {
+      console.log(result);
+      res.render("search.ejs", { posts: result });
+    });
+});
+
+app.post("/add", function (req, res) {
+  res.redirect("/list"); // 앞에서 res.send, res.redirect 등을 사용하면 뒤에서는 사용하지 못한다!! 오류 : "Cannot set headers after they are sent to the client"
+  console.log(req.body.title);
+  console.log(req.body.date);
+
+  //어떤 사람이 /add라는 경로로 post 요청을 하면
+  // 데이터 2개를 보내주는데 post라는 컬렉션에 두 개의 데이터를 저장한다.
+  db.collection("counter").findOne({ name: "postcnt" }, function (err, result) {
+    var totalcount = result.totalPost;
+
+    db.collection("post").insertOne(
+      {
+        _id: totalcount + 1,
+        writer: req.user._id,
+        todo: req.body.title,
+        date: req.body.date,
+      },
+      function (err, result) {
+        console.log("저장완료");
+        //counter라는 컬렉션에 있는 totalPost 1증가시켜주어야 함.
+        db.collection("counter").updateOne(
+          { name: "postcnt" },
+          { $inc: { totalPost: 1 } },
+          function (err, result) {
+            if (err) return console.log(err);
+          }
+        );
+      }
+    );
+  });
+});
+
+//프로그램의 진행순서대로 코드 배치! 이 경우엔 로그인 후 글 쓰고 삭제.
+app.delete("/delete", function (req, res) {
+  console.log(req.body);
+  req.body._id = parseInt(req.body._id);
+
+  let deleteData = { _id: req.body._id, writer: req.user._id };
+
+  db.collection("post").deleteOne(deleteData, function (err, result) {
+    if (err) return console.log(err);
+    console.log("삭제완료");
+    console.log(result.deleteCount);
+    res.status(200).send({ message: "성공했습니다." });
+  });
+});
+
+// multer 설정
+let multer = require("multer");
+let storage = multer.diskStorage({
+  destination: function (req, res, cb) {
+    cb(null, "./public/image");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+let upload = multer({ storage: storage });
+
+app.get("/upload", function (req, res) {
+  res.render("upload.ejs");
+});
+
+app.post("/upload", upload.single("profile"), function (req, res) {
+  res.send("업로드 완료");
+});
+
+app.get("/image/:imgname", function (req, res) {
+  res.sendFile(__dirname + "/public/image/" + req.params.imgname);
 });
