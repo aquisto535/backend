@@ -1,6 +1,12 @@
 const express = require("express");
 const app = express();
 
+//소켓 세팅
+
+const http = require("http").createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(http);
+
 require("dotenv").config();
 
 const bodyParser = require("body-parser");
@@ -51,9 +57,10 @@ MongoClient.connect(process.env.DB_URL, function (err, client) {
   if (err) return console.log(err);
 
   db = client.db("todo_app");
+  app.db = db;
 });
 
-app.listen(process.env.PORT, function () {
+http.listen(process.env.PORT, function () {
   console.log("listening on 8080");
 });
 
@@ -311,6 +318,7 @@ app.delete("/delete", function (req, res) {
 
 // multer 설정
 let multer = require("multer");
+//const { Server } = require("http");
 let storage = multer.diskStorage({
   destination: function (req, res, cb) {
     cb(null, "./public/image");
@@ -332,4 +340,31 @@ app.post("/upload", upload.single("profile"), function (req, res) {
 
 app.get("/image/:imgname", function (req, res) {
   res.sendFile(__dirname + "/public/image/" + req.params.imgname);
+});
+
+//socket
+
+app.get("/socket", function (req, res) {
+  res.render("socket.ejs");
+});
+
+//서버 수신부(socket.ejs 요청에 응답)
+io.on("connection", function (socket) {
+  console.log("유저 접속됨");
+
+  socket.on("room1-send", function (data) {
+    io.to("room1").emit("broadcast", data);
+  });
+
+  socket.on("joinroom", function (data) {
+    console.log(data);
+
+    socket.join("room1");
+  });
+
+  socket.on("user-send", function (data) {
+    console.log(data);
+    //io.emit("broadcast", data); //에코 서버(서버 테스트 시 사용, 다수 동시 통신 중)
+    io.to(socket.id).emit("broadcast", data); //클라이언트들이 따로 따로 서버와 교신
+  });
 });
