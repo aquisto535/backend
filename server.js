@@ -13,9 +13,10 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 const methodOverride = require("method-override");
-
-app.use("/public", express.static("public"));
 app.use(methodOverride("_method"));
+
+//app.use("/public", express.static("public"));
+app.use(express.static(__dirname + "/todo_app/build")); //리액트 버전
 // const session = require("express-session"); //세션 정보 이용하기 위한 패키지.
 // const FileStore = require("session-file-store");
 
@@ -65,7 +66,9 @@ http.listen(process.env.PORT, function () {
 });
 
 app.get("/", function (req, res) {
-  res.render("index");
+  //res.render("index");
+
+  res.sendFile("/index.html");
 });
 
 app.get("/write", (req, res) => {
@@ -318,6 +321,7 @@ app.delete("/delete", function (req, res) {
 
 // multer 설정
 let multer = require("multer");
+const path = require("path");
 //const { Server } = require("http");
 let storage = multer.diskStorage({
   destination: function (req, res, cb) {
